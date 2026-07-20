@@ -1,0 +1,27 @@
+
+    <html>
+    <head>
+        <title>NanoGPT Overfitting Transfer Learning Research Report</title>
+        <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; max-width: 900px; margin: 0 auto; padding: 2rem; color: #333; }
+            h1 { border-bottom: 2px solid #eaecef; padding-bottom: 0.3em; }
+            .graph { margin: 2rem 0; text-align: center; border: 1px solid #ddd; padding: 1rem; border-radius: 8px; }
+            img { max-width: 100%; height: auto; }
+        </style>
+    </head>
+    <body>
+        <h1>NanoGPT Overfitting Transfer Learning Research Report</h1>
+        <p>This report compares two training paths across different model sizes (100k to 5M parameters). Models were trained to predict Tiny Shakespeare characters.</p>
+        <ul>
+            <li><strong>Path A (Control):</strong> Trained directly on Tiny Shakespeare from standard initialization.</li>
+            <li><strong>Path B (Experiment):</strong> Trained to extreme overfitting on a structured Arabic-script corpus, then fine-tuned on Tiny Shakespeare.</li>
+        </ul>
+    
+        <div class="graph">
+            <h2>100k Parameter Model</h2>
+            <img src="loss_100k.png" alt="Loss graph for 100k">
+        </div>
+        
+    </body>
+    </html>
+    

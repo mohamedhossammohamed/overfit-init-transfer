@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Does Overfitting Leave a Reusable Trace?</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=Inter:wght@400;500;600&display=swap');
+
+        :root {
+            --bg: #FAF9F6;
+            --ink: #2A2822;
+            --ink-soft: #6B6860;
+            --rule: #DEDAD0;
+            --accent: #B0522D;
+            --serif: 'Source Serif 4', Georgia, serif;
+            --sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--ink);
+            font-family: var(--sans);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .wrap {
+            max-width: 640px;
+            margin: 0 auto;
+            padding: 96px 28px 120px;
+        }
+
+        .eyebrow {
+            font-family: var(--sans);
+            font-size: 0.78rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--ink-soft);
+            margin: 0 0 20px;
+        }
+
+        h1 {
+            font-family: var(--serif);
+            font-weight: 500;
+            font-size: 2.15rem;
+            line-height: 1.28;
+            letter-spacing: -0.01em;
+            margin: 0 0 20px;
+        }
+
+        .lede {
+            font-family: var(--serif);
+            font-size: 1.15rem;
+            line-height: 1.65;
+            color: var(--ink);
+            margin: 0 0 8px;
+        }
+
+        .status-line {
+            font-size: 0.88rem;
+            color: var(--ink-soft);
+            margin: 28px 0 0;
+            padding-top: 16px;
+            border-top: 1px solid var(--rule);
+        }
+
+        .status-line strong {
+            color: var(--ink);
+            font-weight: 500;
+        }
+
+        section {
+            margin-top: 64px;
+        }
+
+        h2 {
+            font-family: var(--sans);
+            font-weight: 600;
+            font-size: 0.95rem;
+            letter-spacing: 0.01em;
+            color: var(--ink);
+            margin: 0 0 20px;
+        }
+
+        p {
+            font-family: var(--serif);
+            font-size: 1.03rem;
+            line-height: 1.75;
+            color: var(--ink);
+            margin: 0 0 16px;
+        }
+
+        .paths {
+            display: grid;
+            gap: 0;
+            border-top: 1px solid var(--rule);
+        }
+
+        .path-row {
+            display: grid;
+            grid-template-columns: 108px 1fr;
+            gap: 24px;
+            padding: 18px 0;
+            border-bottom: 1px solid var(--rule);
+        }
+
+        .path-name {
+            font-family: var(--sans);
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--accent);
+            padding-top: 2px;
+        }
+
+        .path-desc {
+            font-family: var(--serif);
+            font-size: 0.98rem;
+            line-height: 1.6;
+            color: var(--ink);
+        }
+
+        .note {
+            font-family: var(--sans);
+            font-size: 0.92rem;
+            line-height: 1.7;
+            color: var(--ink-soft);
+            padding-left: 20px;
+            border-left: 2px solid var(--rule);
+        }
+
+        .sponsor {
+            padding-top: 32px;
+            border-top: 1px solid var(--rule);
+        }
+
+        .sponsor p {
+            font-family: var(--sans);
+            font-size: 0.98rem;
+            color: var(--ink);
+        }
+
+        a {
+            color: var(--accent);
+            text-decoration: underline;
+            text-decoration-color: var(--rule);
+            text-underline-offset: 3px;
+        }
+
+        a:hover {
+            text-decoration-color: var(--accent);
+        }
+
+        code {
+            font-family: 'SF Mono', Menlo, monospace;
+            font-size: 0.85em;
+            background: #F0EDE5;
+            padding: 1px 5px;
+            border-radius: 3px;
+        }
+
+        footer {
+            margin-top: 88px;
+            padding-top: 24px;
+            border-top: 1px solid var(--rule);
+            font-family: var(--sans);
+            font-size: 0.82rem;
+            color: var(--ink-soft);
+        }
+
+        @media (max-width: 520px) {
+            .wrap {
+                padding: 64px 22px 88px;
+            }
+
+            h1 {
+                font-size: 1.7rem;
+            }
+
+            .path-row {
+                grid-template-columns: 1fr;
+                gap: 6px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrap">
+
+        <p class="eyebrow">Independent research — pilot study</p>
+        <h1>Does overfitting leave a reusable trace?</h1>
+        <p class="lede">An experiment on initialization geometry in small transformers: if a network is trained to
+            extreme overfitting on one corpus, does starting subsequent training from that state help, hurt, or make no
+            difference at all?</p>
+        <p class="status-line">Status: <strong>pilot trial in progress</strong> · results published as they are
+            collected</p>
+
+        <section>
+            <h2>The question</h2>
+            <p>Training a network to convergence changes its weights in ways that are not well understood outside of the
+                task it converged on. It is an open question whether that state is generically easier to train further,
+                from having settled into some reusable structure, or generically harder, from having settled into a
+                sharp minimum the optimizer struggles to leave.</p>
+            <p>This experiment tests that directly, using two text corpora that share almost no characters, so any
+                effect observed cannot be explained by shared vocabulary or by the content itself transferring. What is
+                being measured is closer to the shape of the loss landscape at a given starting point than to transfer
+                learning in the usual sense.</p>
+        </section>
+
+        <section>
+            <h2>Design</h2>
+            <div class="paths">
+                <div class="path-row">
+                    <div class="path-name">Path A</div>
+                    <div class="path-desc">Random initialization, trained directly on the target corpus. The baseline.
+                    </div>
+                </div>
+                <div class="path-row">
+                    <div class="path-name">Path B</div>
+                    <div class="path-desc">Random initialization, overfit on a source corpus, then trained on the target
+                        corpus from that state — same step budget as Path A.</div>
+                </div>
+                <div class="path-row">
+                    <div class="path-name">Path C</div>
+                    <div class="path-desc">Random initialization, converged on synthetic random-character data, then
+                        trained on the target corpus — isolates whether the source corpus mattered specifically, or any
+                        prior convergence produces the same effect.</div>
+                </div>
+                <div class="path-row">
+                    <div class="path-name">Depth</div>
+                    <div class="path-desc">Two checkpoint depths are taken deterministically at 50% and 90% of the fixed token budget, and each becomes an independent starting point. Training uses a fixed token budget of 200 tokens per parameter, 10x the Chinchilla compute-optimal ratio, deliberately overshooting to induce memorization.</div>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2>Scope</h2>
+            <p class="note">This is a small, character-level pilot — models between 100k and 2M parameters, two random
+                seeds per configuration, run on personal hardware. It is exploratory, not confirmatory: a pattern here
+                is a reason to look further, not a finding on its own. Every metric and checkpoint is published as
+                collected, including null or negative results.</p>
+        </section>
+
+        <section class="sponsor">
+            <h2>Open Source</h2>
+            <p>Code, data, and full methodology: <a href="https://github.com/mohamedhossammohamed/overfit-init-transfer.git">github.com/mohamedhossammohamed/overfit-init-transfer</a></p>
+        </section>
+
+        <footer>Updated as the pilot trial progresses. Independent project, not affiliated with any institution.
+        </footer>
+
+    </div>
+</body>
+
+</html>

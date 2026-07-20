@@ -1,0 +1,45 @@
+Resuming from results/b_2M_seed42_pretrain/b_2M_seed42_pretrain_latest.pt
+[b_2M_seed42_pretrain] step 22200 (363724800 tokens): train 0.1091, val(shake) 28.3538
+[b_2M_seed42_pretrain] step 22250 (364544000 tokens): train 0.1101, val(shake) 26.4757
+[b_2M_seed42_pretrain] step 22300 (365363200 tokens): train 0.1089, val(shake) 26.7995
+[b_2M_seed42_pretrain] step 22350 (366182400 tokens): train 0.1085, val(shake) 26.1710
+[b_2M_seed42_pretrain] step 22400 (367001600 tokens): train 0.1105, val(shake) 27.4183
+[b_2M_seed42_pretrain] step 22450 (367820800 tokens): train 0.1095, val(shake) 27.0079
+[b_2M_seed42_pretrain] step 22500 (368640000 tokens): train 0.1101, val(shake) 25.4124
+[b_2M_seed42_pretrain] step 22550 (369459200 tokens): train 0.1107, val(shake) 27.8419
+[b_2M_seed42_pretrain] step 22600 (370278400 tokens): train 0.1105, val(shake) 26.3013
+[b_2M_seed42_pretrain] step 22650 (371097600 tokens): train 0.1132, val(shake) 24.9939
+[b_2M_seed42_pretrain] step 22700 (371916800 tokens): train 0.1086, val(shake) 25.9914
+[b_2M_seed42_pretrain] step 22750 (372736000 tokens): train 0.1084, val(shake) 27.4611
+[b_2M_seed42_pretrain] step 22800 (373555200 tokens): train 0.1090, val(shake) 28.1999
+[b_2M_seed42_pretrain] step 22850 (374374400 tokens): train 0.1064, val(shake) 26.9007
+Resuming from results/b_2M_seed42_pretrain/b_2M_seed42_pretrain_latest.pt
+[b_2M_seed42_pretrain] step 22900 (375193600 tokens): train 0.1086, val(shake) 28.8003
+[b_2M_seed42_pretrain] step 22950 (376012800 tokens): train 0.1093, val(shake) 30.0105
+[b_2M_seed42_pretrain] step 23000 (376832000 tokens): train 0.1091, val(shake) 29.4257
+Resuming from results/b_2M_seed42_pretrain/b_2M_seed42_pretrain_latest.pt
+[b_2M_seed42_pretrain] step 23050 (377651200 tokens): train 0.1098, val(shake) 28.8741
+[b_2M_seed42_pretrain] step 23100 (378470400 tokens): train 0.1093, val(shake) 27.3803
+[b_2M_seed42_pretrain] step 23150 (379289600 tokens): train 0.1077, val(shake) 28.9925
+[b_2M_seed42_pretrain] step 23200 (380108800 tokens): train 0.1087, val(shake) 27.8389
+[b_2M_seed42_pretrain] step 23250 (380928000 tokens): train 0.1078, val(shake) 28.5587
+[b_2M_seed42_pretrain] step 23300 (381747200 tokens): train 0.1080, val(shake) 27.4803
+[b_2M_seed42_pretrain] step 23350 (382566400 tokens): train 0.1073, val(shake) 28.9999
+[b_2M_seed42_pretrain] step 23400 (383385600 tokens): train 0.1099, val(shake) 29.3408
+[b_2M_seed42_pretrain] step 23450 (384204800 tokens): train 0.1106, val(shake) 29.0715
+[b_2M_seed42_pretrain] step 23500 (385024000 tokens): train 0.1097, val(shake) 28.3085
+[b_2M_seed42_pretrain] step 23550 (385843200 tokens): train 0.1071, val(shake) 27.2910
+[b_2M_seed42_pretrain] step 23600 (386662400 tokens): train 0.1096, val(shake) 28.3911
+[b_2M_seed42_pretrain] step 23650 (387481600 tokens): train 0.1080, val(shake) 28.0953
+[b_2M_seed42_pretrain] step 23700 (388300800 tokens): train 0.1075, val(shake) 28.1772
+[b_2M_seed42_pretrain] step 23750 (389120000 tokens): train 0.1086, val(shake) 27.5282
+[b_2M_seed42_pretrain] step 23800 (389939200 tokens): train 0.1080, val(shake) 28.7688
+[b_2M_seed42_pretrain] step 23850 (390758400 tokens): train 0.1075, val(shake) 29.1800
+[b_2M_seed42_pretrain] step 23900 (391577600 tokens): train 0.1078, val(shake) 28.9523
+[b_2M_seed42_pretrain] step 23950 (392396800 tokens): train 0.1098, val(shake) 28.1792
+[b_2M_seed42_pretrain] step 24000 (393216000 tokens): train 0.1080, val(shake) 28.9315
+[b_2M_seed42_pretrain] step 24050 (394035200 tokens): train 0.1071, val(shake) 30.1830
+[b_2M_seed42_pretrain] step 24100 (394854400 tokens): train 0.1070, val(shake) 30.2003
+[b_2M_seed42_pretrain] step 24150 (395673600 tokens): train 0.1074, val(shake) 29.3184
+[b_2M_seed42_pretrain] step 24200 (396492800 tokens): train 0.1094, val(shake) 28.8811
+[b_2M_seed42_pretrain] step 24219 (396804096 tokens): train 0.1076, val(shake) 29.0809
