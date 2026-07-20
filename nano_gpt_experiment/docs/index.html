@@ -4,7 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Does Overfitting Leave a Reusable Trace?</title>
+    <title>Fixed-Budget Pretraining Transfer: Pilot Status</title>
+    <meta name="description" content="Pilot study on whether pretraining a small transformer to extreme overfitting on one corpus changes downstream performance versus random initialization.">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=Inter:wght@400;500;600&display=swap');
 
@@ -88,6 +89,14 @@
             margin: 0 0 20px;
         }
 
+        h3 {
+            font-family: var(--sans);
+            font-weight: 600;
+            font-size: 0.88rem;
+            color: var(--ink-soft);
+            margin: 32px 0 12px;
+        }
+
         p {
             font-family: var(--serif);
             font-size: 1.03rem;
@@ -164,6 +173,93 @@
             border-radius: 3px;
         }
 
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0 24px;
+            font-size: 0.88rem;
+        }
+
+        th {
+            font-family: var(--sans);
+            font-weight: 600;
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--ink-soft);
+            text-align: left;
+            padding: 8px 10px;
+            border-bottom: 2px solid var(--rule);
+        }
+
+        td {
+            font-family: 'SF Mono', Menlo, monospace;
+            font-size: 0.82rem;
+            padding: 7px 10px;
+            border-bottom: 1px solid var(--rule);
+            color: var(--ink);
+        }
+
+        td:first-child {
+            font-family: var(--sans);
+            font-weight: 500;
+            font-size: 0.84rem;
+        }
+
+        .complete-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            margin: 16px 0 8px;
+        }
+
+        .run-cell {
+            aspect-ratio: 1;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--sans);
+            font-size: 0.6rem;
+            font-weight: 600;
+        }
+
+        .run-cell.done {
+            background: #D4E4D0;
+            color: #3A5A32;
+        }
+
+        .run-cell.pending {
+            background: #F0EDE5;
+            color: var(--ink-soft);
+        }
+
+        .run-cell.active {
+            background: #F5E3C0;
+            color: #8A6B30;
+        }
+
+        .grid-legend {
+            font-family: var(--sans);
+            font-size: 0.75rem;
+            color: var(--ink-soft);
+            margin: 4px 0 0;
+        }
+
+        .grid-legend span {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-right: 14px;
+        }
+
+        .grid-legend .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 2px;
+            display: inline-block;
+        }
+
         footer {
             margin-top: 88px;
             padding-top: 24px;
@@ -186,6 +282,14 @@
                 grid-template-columns: 1fr;
                 gap: 6px;
             }
+
+            table {
+                font-size: 0.8rem;
+            }
+
+            .complete-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
         }
     </style>
 </head>
@@ -194,66 +298,308 @@
     <div class="wrap">
 
         <p class="eyebrow">Independent research — pilot study</p>
-        <h1>Does overfitting leave a reusable trace?</h1>
-        <p class="lede">An experiment on initialization geometry in small transformers: if a network is trained to
-            extreme overfitting on one corpus, does starting subsequent training from that state help, hurt, or make no
-            difference at all?</p>
-        <p class="status-line">Status: <strong>pilot trial in progress</strong> · results published as they are
-            collected</p>
+        <h1>Fixed-budget pretraining transfer in small transformers</h1>
+        <p class="lede">A pilot study on whether pretraining a small transformer to extreme, fixed-token-budget exposure
+            on one corpus — before training on an unrelated one — changes downstream performance versus training from
+            random initialization.</p>
+        <p class="status-line">Status: <strong>23 of 28 runs complete</strong> · seed-1337 replication at 2M scale in
+            progress · last health check 2026-07-20 20:00 UTC+3</p>
 
+        <!-- Completion grid -->
         <section>
-            <h2>The question</h2>
-            <p>Training a network to convergence changes its weights in ways that are not well understood outside of the
-                task it converged on. It is an open question whether that state is generically easier to train further,
-                from having settled into some reusable structure, or generically harder, from having settled into a
-                sharp minimum the optimizer struggles to leave.</p>
-            <p>This experiment tests that directly, using two text corpora that share almost no characters, so any
-                effect observed cannot be explained by shared vocabulary or by the content itself transferring. What is
-                being measured is closer to the shape of the loss landscape at a given starting point than to transfer
-                learning in the usual sense.</p>
+            <h2>Run completion</h2>
+            <div class="complete-grid">
+                <!-- 100k seed 42 — all done -->
+                <div class="run-cell done" title="a_100k_seed42">A</div>
+                <div class="run-cell done" title="b_100k_seed42_pretrain">B-p</div>
+                <div class="run-cell done" title="b_100k_seed42_from_quran_frac0.5">B.5</div>
+                <div class="run-cell done" title="b_100k_seed42_from_quran_frac0.9">B.9</div>
+                <div class="run-cell done" title="c_100k_seed42_pretrain">C-p</div>
+                <div class="run-cell done" title="c_100k_seed42_finetune_frac0.5">C.5</div>
+                <div class="run-cell done" title="c_100k_seed42_finetune_frac0.9">C.9</div>
+                <!-- 100k seed 1337 — all done -->
+                <div class="run-cell done" title="a_100k_seed1337">A</div>
+                <div class="run-cell done" title="b_100k_seed1337_pretrain">B-p</div>
+                <div class="run-cell done" title="b_100k_seed1337_from_quran_frac0.5">B.5</div>
+                <div class="run-cell done" title="b_100k_seed1337_from_quran_frac0.9">B.9</div>
+                <div class="run-cell done" title="c_100k_seed1337_pretrain">C-p</div>
+                <div class="run-cell done" title="c_100k_seed1337_finetune_frac0.5">C.5</div>
+                <div class="run-cell done" title="c_100k_seed1337_finetune_frac0.9">C.9</div>
+                <!-- 2M seed 42 — all done -->
+                <div class="run-cell done" title="a_2M_seed42">A</div>
+                <div class="run-cell done" title="b_2M_seed42_pretrain">B-p</div>
+                <div class="run-cell done" title="b_2M_seed42_from_quran_frac0.5">B.5</div>
+                <div class="run-cell done" title="b_2M_seed42_from_quran_frac0.9">B.9</div>
+                <div class="run-cell done" title="c_2M_seed42_pretrain">C-p</div>
+                <div class="run-cell done" title="c_2M_seed42_finetune_frac0.5">C.5</div>
+                <div class="run-cell done" title="c_2M_seed42_finetune_frac0.9">C.9</div>
+                <!-- 2M seed 1337 — partial -->
+                <div class="run-cell done" title="a_2M_seed1337">A</div>
+                <div class="run-cell pending" title="b_2M_seed1337_pretrain">B-p</div>
+                <div class="run-cell pending" title="b_2M_seed1337_from_quran_frac0.5">B.5</div>
+                <div class="run-cell pending" title="b_2M_seed1337_from_quran_frac0.9">B.9</div>
+                <div class="run-cell done" title="c_2M_seed1337_pretrain">C-p</div>
+                <div class="run-cell active" title="c_2M_seed1337_finetune_frac0.5 (in progress, step ~5550/24220)">C.5</div>
+                <div class="run-cell pending" title="c_2M_seed1337_finetune_frac0.9">C.9</div>
+            </div>
+            <div class="grid-legend">
+                <span><span class="dot" style="background:#D4E4D0;"></span> Complete</span>
+                <span><span class="dot" style="background:#F5E3C0;"></span> In progress</span>
+                <span><span class="dot" style="background:#F0EDE5;"></span> Queued</span>
+            </div>
+            <p style="margin-top:12px;">Rows: 100k seed 42, 100k seed 1337, 2M seed 42, 2M seed 1337. All 100k and
+                2M-seed-42 runs are complete across both seeds. The remaining five runs are 2M-seed-1337
+                Path&nbsp;B and Path&nbsp;C conditions.</p>
         </section>
 
         <section>
             <h2>Design</h2>
             <div class="paths">
                 <div class="path-row">
-                    <div class="path-name">Path A</div>
-                    <div class="path-desc">Random initialization, trained directly on the target corpus. The baseline.
-                    </div>
+                    <div class="path-name">Condition A</div>
+                    <div class="path-desc">Baseline. Random initialization, trained directly on the target corpus
+                        (Tiny Shakespeare subset, English, character-level).</div>
                 </div>
                 <div class="path-row">
-                    <div class="path-name">Path B</div>
-                    <div class="path-desc">Random initialization, overfit on a source corpus, then trained on the target
-                        corpus from that state — same step budget as Path A.</div>
+                    <div class="path-name">Condition B</div>
+                    <div class="path-desc">Corpus-pretrained. Random initialization, pretrained on a structured
+                        Arabic-script corpus with near-zero character overlap with the English target, then finetuned on
+                        the target corpus with the same step budget as Condition&nbsp;A.</div>
                 </div>
                 <div class="path-row">
-                    <div class="path-name">Path C</div>
-                    <div class="path-desc">Random initialization, converged on synthetic random-character data, then
-                        trained on the target corpus — isolates whether the source corpus mattered specifically, or any
-                        prior convergence produces the same effect.</div>
+                    <div class="path-name">Condition C</div>
+                    <div class="path-desc">Noise-pretrained. Random initialization, pretrained on uniformly sampled
+                        random characters from the shared vocabulary, then finetuned on the target corpus — controls
+                        for whether any prior gradient exposure, regardless of structure, produces the same effect.</div>
                 </div>
                 <div class="path-row">
-                    <div class="path-name">Depth</div>
-                    <div class="path-desc">Two checkpoint depths are taken deterministically at 50% and 90% of the fixed token budget, and each becomes an independent starting point. Training uses a fixed token budget of 200 tokens per parameter, 10x the Chinchilla compute-optimal ratio, deliberately overshooting to induce memorization.</div>
+                    <div class="path-name">Scales</div>
+                    <div class="path-desc">Two model sizes: ~106k parameters (2 layers, 4 heads, embed 64) and ~1.98M
+                        parameters (4 layers, 8 heads, embed 256). Two random seeds per configuration (42, 1337).</div>
+                </div>
+                <div class="path-row">
+                    <div class="path-name">Budget</div>
+                    <div class="path-desc">Fixed at 200 tokens per parameter — approximately 10× the Chinchilla
+                        compute-optimal ratio — applied identically to pretraining and finetuning phases.
+                        Checkpoints for finetuning are taken at 50% and 90% of the pretraining budget.</div>
                 </div>
             </div>
         </section>
 
         <section>
+            <h2>Methodology</h2>
+            <p>Training budgets are set in tokens, not by loss threshold: each run receives exactly
+                <code>200 × param_count</code> tokens. Three conditions (baseline / structured-corpus-pretrained /
+                noise-pretrained) are compared at two model sizes across two random seeds. Final validation loss is
+                compared at matched finetuning step budgets across conditions.</p>
+            <p>Conditions B and C each produce two finetuning runs from checkpoints at 50% and 90% of the pretraining
+                budget. The baseline (Condition A) uses the full budget as a single training phase. All finetuning
+                runs receive the same total finetuning step count regardless of checkpoint depth.</p>
+        </section>
+
+        <section>
+            <h2>Results: 100k scale (both seeds complete)</h2>
+            <p>Final validation loss at budget exhaustion. Both seeds (42 and 1337) are complete for all conditions at
+                this scale.</p>
+
+            <h3>Seed 42</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Run</th>
+                        <th>Final val loss</th>
+                        <th>Descending?</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>A (baseline)</td>
+                        <td>1.806</td>
+                        <td>yes</td>
+                    </tr>
+                    <tr>
+                        <td>B frac 0.5</td>
+                        <td>2.008</td>
+                        <td>yes</td>
+                    </tr>
+                    <tr>
+                        <td>B frac 0.9</td>
+                        <td>1.879</td>
+                        <td>yes</td>
+                    </tr>
+                    <tr>
+                        <td>C frac 0.5</td>
+                        <td>1.750</td>
+                        <td>yes</td>
+                    </tr>
+                    <tr>
+                        <td>C frac 0.9</td>
+                        <td>1.737</td>
+                        <td>yes</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Seed 1337</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Run</th>
+                        <th>Final val loss</th>
+                        <th>Descending?</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>A (baseline)</td>
+                        <td>1.807</td>
+                        <td>yes</td>
+                    </tr>
+                    <tr>
+                        <td>B frac 0.5</td>
+                        <td>1.984</td>
+                        <td>yes</td>
+                    </tr>
+                    <tr>
+                        <td>B frac 0.9</td>
+                        <td>1.853</td>
+                        <td>yes</td>
+                    </tr>
+                    <tr>
+                        <td>C frac 0.5</td>
+                        <td>1.769</td>
+                        <td>yes</td>
+                    </tr>
+                    <tr>
+                        <td>C frac 0.9</td>
+                        <td>1.736</td>
+                        <td>yes</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <p>At 100k, the noise-pretrained condition (C) slightly outperforms the baseline (A) at both checkpoint
+                depths, while the corpus-pretrained condition (B) underperforms the baseline. All runs were still
+                descending at budget exhaustion.</p>
+        </section>
+
+        <section>
+            <h2>Results: 2M scale (seed 42 complete; seed 1337 in progress)</h2>
+            <p>Final validation loss for completed 2M runs. Seed-1337 Path B and remaining Path C finetuning runs are
+                not yet complete; numeric comparisons at this scale are single-seed only for the B vs. C comparison.</p>
+
+            <h3>Seed 42</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Run</th>
+                        <th>Final val loss</th>
+                        <th>Descending?</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>A (baseline)</td>
+                        <td>0.3205</td>
+                        <td>yes</td>
+                    </tr>
+                    <tr>
+                        <td>B frac 0.5</td>
+                        <td>0.3820</td>
+                        <td>yes</td>
+                    </tr>
+                    <tr>
+                        <td>B frac 0.9</td>
+                        <td>0.3719</td>
+                        <td>yes</td>
+                    </tr>
+                    <tr>
+                        <td>C frac 0.5</td>
+                        <td>0.3827</td>
+                        <td>yes</td>
+                    </tr>
+                    <tr>
+                        <td>C frac 0.9</td>
+                        <td>0.3648</td>
+                        <td>yes</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Seed 1337 (partial)</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Run</th>
+                        <th>Final val loss</th>
+                        <th>Descending?</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>A (baseline)</td>
+                        <td>0.3395</td>
+                        <td>yes</td>
+                    </tr>
+                    <tr>
+                        <td>B frac 0.5</td>
+                        <td colspan="2">not yet complete</td>
+                    </tr>
+                    <tr>
+                        <td>B frac 0.9</td>
+                        <td colspan="2">not yet complete</td>
+                    </tr>
+                    <tr>
+                        <td>C frac 0.5</td>
+                        <td colspan="2">in progress (~step 5550 / 24220)</td>
+                    </tr>
+                    <tr>
+                        <td>C frac 0.9</td>
+                        <td colspan="2">not yet complete</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h2>Tentative reading</h2>
+            <p>At the 2M scale (seed 42, the only complete seed for all three conditions), the corpus-pretrained
+                condition (B) and the noise-pretrained condition (C) converge to statistically similar final validation
+                loss — both underperforming the random-initialization baseline (A). The baseline achieves a final
+                validation loss of 0.3205; the best pretrained conditions reach 0.3648 (C frac 0.9) and 0.3719
+                (B frac 0.9).</p>
+            <p>This indicates that, at this scale, prior training exposure on a structured non-English corpus with
+                near-zero character overlap with the target does not confer a measurable downstream benefit over
+                noise pretraining. Both pretrained conditions incur a deficit relative to random initialization under
+                a fixed token budget. The shared-vocabulary structure that the model could in principle have leveraged
+                does not produce a measurable benefit under these conditions.</p>
+            <p>At the 100k scale (both seeds complete), the pattern differs: noise-pretrained (C) runs slightly
+                outperform the baseline, while corpus-pretrained (B) runs underperform it — though all final
+                losses remain close and all curves were still descending at budget exhaustion.</p>
+            <p class="note"><strong>Caveats.</strong> The 2M B-vs-C comparison is single-seed (seed 42 only);
+                seed 1337 replication is in progress. Additionally, per the project's data glossary, seed 42 and seed
+                1337 use different underlying text for Path B pretraining (the original corpus vs. a byte-and-token-matched
+                replacement Arabic Wikipedia corpus), making them non-exact replicates for Path B specifically. Path A
+                and Path C are unaffected and remain true replicates across seeds. All results should be understood
+                as exploratory pilot data, not confirmatory findings.</p>
+        </section>
+
+        <section>
             <h2>Scope</h2>
-            <p class="note">This is a small, character-level pilot — models between 100k and 2M parameters, two random
-                seeds per configuration, run on personal hardware. It is exploratory, not confirmatory: a pattern here
-                is a reason to look further, not a finding on its own. Every metric and checkpoint is published as
+            <p class="note">This is a small, character-level pilot — models between 106k and 1.98M parameters, two
+                random seeds per configuration, run on personal hardware. It is exploratory, not confirmatory: a pattern
+                here is a reason to look further, not a finding on its own. Every metric and checkpoint is published as
                 collected, including null or negative results.</p>
         </section>
 
         <section class="sponsor">
-            <h2>Open Source</h2>
-            <p>Code, data, and full methodology: <a href="https://github.com/mohamedhossammohamed/overfit-init-transfer.git">github.com/mohamedhossammohamed/overfit-init-transfer</a></p>
+            <h2>Open source</h2>
+            <p>Code, data, and full methodology: <a
+                    href="https://github.com/mohamedhossammohamed/overfit-init-transfer">github.com/mohamedhossammohamed/overfit-init-transfer</a>
+            </p>
         </section>
 
-        <footer>Updated as the pilot trial progresses. Independent project, not affiliated with any institution.
-        </footer>
+        <footer>Updated 2026-07-20. Independent project, not affiliated with any institution.</footer>
 
     </div>
 </body>
