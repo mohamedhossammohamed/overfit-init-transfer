@@ -237,7 +237,7 @@ def main():
                             dataset = "shakespeare"
 
                     cmd = [
-                        "python", "-u", "train.py",
+                        sys.executable, "-u", "train.py",
                         "--run_id", run_id,
                         "--path", run['path'],
                         "--phase", run['phase'],
