@@ -1,235 +1,296 @@
-import json
 import os
+import json
 import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
+import pandas as pd
 import numpy as np
-from matplotlib.lines import Line2D
 
 os.environ['MPLCONFIGDIR'] = os.path.join(os.getcwd(), '.mplconfig')
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 
-plt.rcParams.update({
-    'font.family': 'sans-serif',
-    'font.sans-serif': ['Helvetica', 'Arial', 'DejaVu Sans'],
-    'font.size': 10,
-    'axes.labelsize': 11,
-    'axes.titlesize': 12,
-    'xtick.labelsize': 9,
-    'ytick.labelsize': 9,
-    'legend.fontsize': 8.5,
-    'figure.titlesize': 13,
-    'axes.edgecolor': '#DEDAD0',
-    'axes.linewidth': 1.0,
-    'grid.color': '#EFECE6',
-    'grid.linestyle': '--',
-    'grid.linewidth': 0.6,
-    'axes.facecolor': '#FAF9F6',
-    'figure.facecolor': '#FAF9F6',
-})
+def parse_run_id(run_id):
+    if 'pretrain' in run_id:
+        return None
+    
+    scale = '2M' if '2M' in run_id else '100k'
+    seed = '42' if 'seed42' in run_id else '1337'
+    
+    if run_id.startswith('a_'):
+        condition = 'A'
+        frac = None
+    elif run_id.startswith('b_'):
+        condition = 'B'
+        frac = '0.5' if 'frac0.5' in run_id else '0.9'
+    elif run_id.startswith('c_'):
+        condition = 'C'
+        frac = '0.5' if 'frac0.5' in run_id else '0.9'
+    else:
+        return None
+        
+    return {
+        'run_id': run_id,
+        'scale': scale,
+        'seed': seed,
+        'condition': condition,
+        'frac': frac,
+        'label': f"{condition} {frac}" if frac else condition
+    }
 
-RUNS_FILE = 'results/runs.jsonl'
-OUTPUT_DIR = 'docs/figures'
-os.makedirs(OUTPUT_DIR, exist_ok=True)
+def get_style(meta):
+    colors = {
+        'A': '#2A2822',
+        'B 0.5': '#C86D3B',
+        'B 0.9': '#8B3A19',
+        'C 0.5': '#5B8C69',
+        'C 0.9': '#2E5A3C'
+    }
+    color = colors.get(meta['label'], '#000000')
+    linestyle = '-' if meta['seed'] == '42' else '--'
+    return color, linestyle
 
-# --- Load data ---
-runs = {}
-with open(RUNS_FILE, 'r') as f:
-    for line in f:
-        if not line.strip():
-            continue
-        record = json.loads(line)
-        if 'train_loss' not in record:
-            continue
-        run_id = record['run_id']
-        if run_id not in runs:
-            runs[run_id] = []
-        runs[run_id].append(record)
+def load_data(filepath):
+    data = []
+    with open(filepath, 'r') as f:
+        for line in f:
+            if not line.strip(): continue
+            try:
+                row = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+                
+            if 'train_loss' not in row or row['train_loss'] is None:
+                continue
+            if 'run_id' not in row:
+                continue
+                
+            run_id = row['run_id']
+            meta = parse_run_id(run_id)
+            if meta is None:
+                continue
+            
+            data.append({
+                'run_id': run_id,
+                'scale': meta['scale'],
+                'seed': meta['seed'],
+                'condition': meta['condition'],
+                'frac': meta['frac'],
+                'label': meta['label'],
+                'step': row.get('step', 0),
+                'tokens_seen': row.get('tokens_seen', 0),
+                'train_loss': row['train_loss'],
+                'weight_update_norm': row.get('weight_update_norm', np.nan)
+            })
+    return pd.DataFrame(data)
 
-# --- Color palette ---
-COLORS = {
-    'A':    '#2A2822',
-    'B_0.5': '#C86D3B',
-    'B_0.9': '#8B3A19',
-    'C_0.5': '#5B8C69',
-    'C_0.9': '#2E5A3C',
-}
-STYLES = {'42': '-', '1337': '--'}
+def main():
+    os.makedirs('docs/figures', exist_ok=True)
+    df = load_data('results/runs.jsonl')
+    
+    if df.empty:
+        print("No data loaded. Check runs.jsonl")
+        return
+        
+    # Pre-compute final losses
+    final_losses = df.loc[df.groupby('run_id')['step'].idxmax()]
+    
+    # 1. learning_curves.png
+    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+    for i, scale in enumerate(['100k', '2M']):
+        ax = axes[i]
+        subset = df[df['scale'] == scale]
+        for run_id, group in subset.groupby('run_id'):
+            meta = parse_run_id(run_id)
+            color, ls = get_style(meta)
+            ax.plot(group['tokens_seen'], group['train_loss'], color=color, linestyle=ls, label=f"{meta['label']} (s{meta['seed']})")
+        ax.set_title(f"Learning Curves ({scale})")
+        ax.set_xlabel("Tokens Seen")
+        ax.set_ylabel("Train Loss")
+        handles, labels = ax.get_legend_handles_labels()
+        by_label = dict(zip(labels, handles))
+        ax.legend(by_label.values(), by_label.keys(), fontsize='small', loc='upper right')
+    plt.tight_layout()
+    plt.savefig('docs/figures/learning_curves.png', dpi=200)
+    plt.close()
 
-def cond(run_id):
-    if run_id.startswith('a_'): return 'A'
-    if 'from_quran_frac0.5' in run_id: return 'B_0.5'
-    if 'from_quran_frac0.9' in run_id: return 'B_0.9'
-    if 'finetune_frac0.5' in run_id: return 'C_0.5'
-    if 'finetune_frac0.9' in run_id: return 'C_0.9'
-    return None
+    # 2. relative_delta.png
+    deltas = []
+    for scale in ['100k', '2M']:
+        scale_final = final_losses[final_losses['scale'] == scale]
+        baseline_mean = scale_final[scale_final['label'] == 'A']['train_loss'].mean()
+        for label in ['B 0.5', 'B 0.9', 'C 0.5', 'C 0.9']:
+            cond_mean = scale_final[scale_final['label'] == label]['train_loss'].mean()
+            deltas.append({
+                'scale': scale,
+                'label': label,
+                'delta': cond_mean - baseline_mean
+            })
+    delta_df = pd.DataFrame(deltas)
+    fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+    for i, scale in enumerate(['100k', '2M']):
+        ax = axes[i]
+        subset = delta_df[delta_df['scale'] == scale]
+        colors = [get_style({'label': l, 'seed': '42'})[0] for l in subset['label']]
+        bars = ax.bar(subset['label'], subset['delta'], color=colors)
+        ax.set_title(f"Delta vs Baseline A ({scale})")
+        ax.set_ylabel("Delta Final Train Loss")
+        ax.axhline(0, color='black', linewidth=0.8)
+        for bar in bars:
+            yval = bar.get_height()
+            ax.text(bar.get_x() + bar.get_width()/2, yval, round(yval, 4), ha='center', va='bottom' if yval > 0 else 'top')
+    plt.tight_layout()
+    plt.savefig('docs/figures/relative_delta.png', dpi=200)
+    plt.close()
 
-def seed(run_id):
-    return '42' if 'seed42' in run_id else '1337'
+    # 3. recovery_dynamics.png
+    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+    for i, (scale, max_steps) in enumerate([('100k', 300), ('2M', 2000)]):
+        ax = axes[i]
+        subset = df[(df['scale'] == scale) & (df['seed'] == '42') & (df['step'] <= max_steps)]
+        for run_id, group in subset.groupby('run_id'):
+            meta = parse_run_id(run_id)
+            color, ls = get_style(meta)
+            ax.plot(group['step'], group['train_loss'], color=color, linestyle=ls, label=meta['label'])
+        ax.set_title(f"Recovery Dynamics ({scale}, Seed 42)")
+        ax.set_xlabel("Step")
+        ax.set_ylabel("Train Loss")
+        handles, labels = ax.get_legend_handles_labels()
+        by_label = dict(zip(labels, handles))
+        ax.legend(by_label.values(), by_label.keys())
+    plt.tight_layout()
+    plt.savefig('docs/figures/recovery_dynamics.png', dpi=200)
+    plt.close()
 
-def scale(run_id):
-    return '100k' if '_100k_' in run_id else '2M'
+    # 4. weight_update_norms.png
+    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+    for i, scale in enumerate(['100k', '2M']):
+        ax = axes[i]
+        subset = df[(df['scale'] == scale) & (df['seed'] == '42')]
+        for run_id, group in subset.groupby('run_id'):
+            meta = parse_run_id(run_id)
+            color, ls = get_style(meta)
+            ax.plot(group['step'], group['weight_update_norm'], color=color, linestyle=ls, label=meta['label'], alpha=0.7)
+        ax.set_title(f"Weight Update Norms ({scale}, Seed 42)")
+        ax.set_xlabel("Step")
+        ax.set_ylabel("Weight Update Norm")
+        handles, labels = ax.get_legend_handles_labels()
+        by_label = dict(zip(labels, handles))
+        ax.legend(by_label.values(), by_label.keys())
+    plt.tight_layout()
+    plt.savefig('docs/figures/weight_update_norms.png', dpi=200)
+    plt.close()
 
-# Use train_loss throughout — val_loss diverges at 2M due to extreme overfitting
-# on the tiny Shakespeare corpus, making train_loss the informative comparison
-METRIC = 'train_loss'
-METRIC_LABEL = 'Training Loss'
+    # 5. loss_heatmap.png
+    heatmap_data = np.zeros((5, 4))
+    rows = ['A', 'B 0.5', 'B 0.9', 'C 0.5', 'C 0.9']
+    cols = [('100k', '42'), ('100k', '1337'), ('2M', '42'), ('2M', '1337')]
+    
+    for r_idx, label in enumerate(rows):
+        for c_idx, (scale, seed) in enumerate(cols):
+            val = final_losses[(final_losses['label'] == label) & (final_losses['scale'] == scale) & (final_losses['seed'] == seed)]
+            if len(val) > 0:
+                heatmap_data[r_idx, c_idx] = val.iloc[0]['train_loss']
+            else:
+                heatmap_data[r_idx, c_idx] = np.nan
 
-# ================================================================
-# Figure 1: Learning Curve Overlays
-# ================================================================
-fig, axes = plt.subplots(1, 2, figsize=(11, 4.5))
+    fig, ax = plt.subplots(figsize=(8, 6))
+    im = ax.imshow(heatmap_data, cmap='YlGnBu')
+    
+    ax.set_xticks(np.arange(len(cols)))
+    ax.set_yticks(np.arange(len(rows)))
+    ax.set_xticklabels([f"{s} s{sd}" for s, sd in cols])
+    ax.set_yticklabels(rows)
+    
+    for i in range(len(rows)):
+        for j in range(len(cols)):
+            v = heatmap_data[i, j]
+            text = ax.text(j, i, f"{v:.4f}" if not np.isnan(v) else "NaN", ha="center", va="center", color="black" if np.isnan(v) or v > np.nanmean(heatmap_data) else "white")
+            
+    ax.set_title("Final Train Loss Heatmap")
+    plt.tight_layout()
+    plt.savefig('docs/figures/loss_heatmap.png', dpi=200)
+    plt.close()
 
-for sc, ax in zip(['100k', '2M'], axes):
-    ax.set_title(f'{METRIC_LABEL} Trajectory — {sc}', pad=10)
-    ax.set_xlabel('Tokens Seen (finetuning phase)')
-    ax.set_ylabel(METRIC_LABEL)
-    ax.grid(True)
+    # 6. scale_interaction.png
+    fig, ax = plt.subplots(figsize=(8, 6))
+    bar_width = 0.35
+    x = np.arange(2)
+    
+    a_100k = final_losses[(final_losses['scale'] == '100k') & (final_losses['label'] == 'A')]['train_loss'].mean()
+    best_pre_100k_data = final_losses[(final_losses['scale'] == '100k') & (final_losses['label'] != 'A')].groupby('label')['train_loss'].mean()
+    best_pre_100k = best_pre_100k_data.min() if not best_pre_100k_data.empty else np.nan
+    best_pre_100k_label = best_pre_100k_data.idxmin() if not best_pre_100k_data.empty else 'N/A'
+    
+    a_2m = final_losses[(final_losses['scale'] == '2M') & (final_losses['label'] == 'A')]['train_loss'].mean()
+    best_pre_2m_data = final_losses[(final_losses['scale'] == '2M') & (final_losses['label'] != 'A')].groupby('label')['train_loss'].mean()
+    best_pre_2m = best_pre_2m_data.min() if not best_pre_2m_data.empty else np.nan
+    best_pre_2m_label = best_pre_2m_data.idxmin() if not best_pre_2m_data.empty else 'N/A'
+    
+    a_means = [a_100k, a_2m]
+    best_pre_means = [best_pre_100k, best_pre_2m]
+    
+    rects1 = ax.bar(x - bar_width/2, a_means, bar_width, label='Baseline A', color=get_style({'label': 'A', 'seed': '42'})[0])
+    
+    c100 = get_style({'label': best_pre_100k_label, 'seed': '42'})[0] if best_pre_100k_label != 'N/A' else 'gray'
+    c2m = get_style({'label': best_pre_2m_label, 'seed': '42'})[0] if best_pre_2m_label != 'N/A' else 'gray'
+    
+    rects2 = ax.bar(x + bar_width/2, best_pre_means, bar_width, label='Best Pretrained', color=[c100, c2m])
+    
+    ax.set_ylabel('Mean Final Train Loss')
+    ax.set_title('Scale Interaction: Regularization Flip')
+    ax.set_xticks(x)
+    ax.set_xticklabels(['100k', '2M'])
+    
+    from matplotlib.patches import Patch
+    legend_elements = [Patch(facecolor=get_style({'label': 'A', 'seed': '42'})[0], label='Baseline A'),
+                       Patch(facecolor='gray', label='Best Pretrained')]
+    ax.legend(handles=legend_elements)
+    
+    for i, rect in enumerate(rects1):
+        if not np.isnan(a_means[i]):
+            ax.text(rect.get_x() + rect.get_width()/2., rect.get_height(), f"{a_means[i]:.4f}", ha='center', va='bottom')
+    for i, rect in enumerate(rects2):
+        if not np.isnan(best_pre_means[i]):
+            lbl = best_pre_100k_label if i == 0 else best_pre_2m_label
+            ax.text(rect.get_x() + rect.get_width()/2., rect.get_height(), f"{best_pre_means[i]:.4f}\n({lbl})", ha='center', va='bottom')
+        
+    plt.tight_layout()
+    plt.savefig('docs/figures/scale_interaction.png', dpi=200)
+    plt.close()
 
-    for rid, recs in sorted(runs.items()):
-        if scale(rid) != sc or 'pretrain' in rid:
-            continue
-        c = cond(rid)
-        if not c:
-            continue
-        s = seed(rid)
-        x = [r['tokens_seen'] for r in recs]
-        y = [r[METRIC] for r in recs]
-        ax.plot(x, y, color=COLORS[c], linestyle=STYLES[s],
-                alpha=0.85, linewidth=1.5)
+    # 7. seed_replication.png
+    fig, ax = plt.subplots(figsize=(10, 6))
+    
+    labels_2m = ['A', 'B 0.5', 'B 0.9', 'C 0.5', 'C 0.9']
+    s42_vals = []
+    s1337_vals = []
+    
+    for lbl in labels_2m:
+        val42 = final_losses[(final_losses['scale'] == '2M') & (final_losses['label'] == lbl) & (final_losses['seed'] == '42')]['train_loss']
+        val1337 = final_losses[(final_losses['scale'] == '2M') & (final_losses['label'] == lbl) & (final_losses['seed'] == '1337')]['train_loss']
+        s42_vals.append(val42.iloc[0] if len(val42) > 0 else 0)
+        s1337_vals.append(val1337.iloc[0] if len(val1337) > 0 else 0)
+        
+    x = np.arange(len(labels_2m))
+    bar_width = 0.35
+    
+    colors = [get_style({'label': l, 'seed': '42'})[0] for l in labels_2m]
+    
+    rects1 = ax.bar(x - bar_width/2, s42_vals, bar_width, label='Seed 42', color=colors, edgecolor='black', hatch='')
+    rects2 = ax.bar(x + bar_width/2, s1337_vals, bar_width, label='Seed 1337', color=colors, edgecolor='black', hatch='//')
+    
+    ax.set_ylabel('Final Train Loss')
+    ax.set_title('Seed Replication (2M Scale)')
+    ax.set_xticks(x)
+    ax.set_xticklabels(labels_2m)
+    ax.legend()
+    
+    all_vals = [v for v in s42_vals + s1337_vals if v > 0]
+    if all_vals:
+        ax.set_ylim(min(all_vals) * 0.95, max(all_vals) * 1.05)
+        
+    plt.tight_layout()
+    plt.savefig('docs/figures/seed_replication.png', dpi=200)
+    plt.close()
 
-legend_elements = [
-    Line2D([0], [0], color=COLORS['A'],    lw=1.8, label='A (baseline)'),
-    Line2D([0], [0], color=COLORS['B_0.5'], lw=1.8, label='B corpus (frac 0.5)'),
-    Line2D([0], [0], color=COLORS['B_0.9'], lw=1.8, label='B corpus (frac 0.9)'),
-    Line2D([0], [0], color=COLORS['C_0.5'], lw=1.8, label='C noise (frac 0.5)'),
-    Line2D([0], [0], color=COLORS['C_0.9'], lw=1.8, label='C noise (frac 0.9)'),
-    Line2D([0], [0], color='#999', lw=1.5, ls='-',  label='Seed 42 (solid)'),
-    Line2D([0], [0], color='#999', lw=1.5, ls='--', label='Seed 1337 (dashed)'),
-]
-axes[1].legend(handles=legend_elements, loc='upper right',
-               frameon=True, facecolor='#FAF9F6', edgecolor='#DEDAD0')
-plt.tight_layout()
-plt.savefig(os.path.join(OUTPUT_DIR, 'learning_curves.png'), dpi=200, bbox_inches='tight')
-plt.close()
-
-# ================================================================
-# Figure 2: Relative Delta Bar Chart
-# ================================================================
-final = {}
-for rid, recs in runs.items():
-    if 'pretrain' in rid: continue
-    c = cond(rid)
-    if not c: continue
-    final[(scale(rid), seed(rid), c)] = recs[-1][METRIC]
-
-conditions = ['B_0.5', 'B_0.9', 'C_0.5', 'C_0.9']
-cond_labels = ['B corpus\n(frac 0.5)', 'B corpus\n(frac 0.9)', 'C noise\n(frac 0.5)', 'C noise\n(frac 0.9)']
-
-deltas_100k, deltas_2M = [], []
-for c in conditions:
-    d42 = final[('100k', '42', c)] - final[('100k', '42', 'A')]
-    d1337 = final[('100k', '1337', c)] - final[('100k', '1337', 'A')]
-    deltas_100k.append((d42 + d1337) / 2)
-    deltas_2M.append(final[('2M', '42', c)] - final[('2M', '42', 'A')])
-
-fig, ax = plt.subplots(figsize=(7, 4))
-x = np.arange(len(conditions))
-w = 0.35
-r1 = ax.bar(x - w/2, deltas_100k, w, label='100k (mean of seeds 42 & 1337)', color='#6B6860', alpha=0.85)
-r2 = ax.bar(x + w/2, deltas_2M, w, label='2M (seed 42 only)', color='#B0522D', alpha=0.85)
-ax.axhline(0, color='#2A2822', lw=0.9)
-ax.set_ylabel(f'Δ Final {METRIC_LABEL} vs. Baseline (A)')
-ax.set_title('Performance Relative to Random-Init Baseline', pad=12)
-ax.set_xticks(x); ax.set_xticklabels(cond_labels)
-ax.legend(frameon=True, facecolor='#FAF9F6', edgecolor='#DEDAD0')
-ax.grid(True, axis='y')
-
-for rects in [r1, r2]:
-    for rect in rects:
-        h = rect.get_height()
-        ax.annotate(f'{h:+.3f}', xy=(rect.get_x() + rect.get_width()/2, h),
-                    xytext=(0, 3 if h >= 0 else -10), textcoords='offset points',
-                    ha='center', va='bottom' if h >= 0 else 'top', fontsize=7.5)
-
-plt.tight_layout()
-plt.savefig(os.path.join(OUTPUT_DIR, 'relative_delta.png'), dpi=200, bbox_inches='tight')
-plt.close()
-
-# ================================================================
-# Figure 3: Recovery Dynamics (early finetuning steps)
-# ================================================================
-fig, axes = plt.subplots(1, 2, figsize=(10, 4.2))
-
-for idx, (sc, max_step) in enumerate([('100k', 300), ('2M', 2000)]):
-    ax = axes[idx]
-    ax.set_title(f'Early Recovery — {sc} (seed 42)', pad=10)
-    ax.set_xlabel('Steps')
-    ax.set_ylabel(METRIC_LABEL)
-    ax.grid(True)
-    for c in ['A', 'B_0.5', 'B_0.9', 'C_0.5', 'C_0.9']:
-        for rid in runs:
-            if scale(rid) == sc and seed(rid) == '42' and cond(rid) == c and 'pretrain' not in rid:
-                recs = [r for r in runs[rid] if r['step'] <= max_step]
-                ax.plot([r['step'] for r in recs], [r[METRIC] for r in recs],
-                        label=c.replace('_', ' '), color=COLORS[c], lw=1.6)
-                break
-axes[0].legend(frameon=True, facecolor='#FAF9F6', edgecolor='#DEDAD0')
-plt.tight_layout()
-plt.savefig(os.path.join(OUTPUT_DIR, 'recovery_dynamics.png'), dpi=200, bbox_inches='tight')
-plt.close()
-
-# ================================================================
-# Figure 4: Weight Update Norm Trajectories
-# ================================================================
-fig, axes = plt.subplots(1, 2, figsize=(11, 4.2))
-
-for sc, ax in zip(['100k', '2M'], axes):
-    ax.set_title(f'Weight Update Norm — {sc} (seed 42)', pad=10)
-    ax.set_xlabel('Steps')
-    ax.set_ylabel('‖ΔW‖')
-    ax.grid(True)
-    for c in ['A', 'B_0.5', 'B_0.9', 'C_0.5', 'C_0.9']:
-        for rid in runs:
-            if scale(rid) == sc and seed(rid) == '42' and cond(rid) == c and 'pretrain' not in rid:
-                recs = runs[rid]
-                ax.plot([r['step'] for r in recs], [r['weight_update_norm'] for r in recs],
-                        label=c.replace('_', ' '), color=COLORS[c], lw=1.3, alpha=0.85)
-                break
-axes[1].legend(frameon=True, facecolor='#FAF9F6', edgecolor='#DEDAD0')
-plt.tight_layout()
-plt.savefig(os.path.join(OUTPUT_DIR, 'weight_update_norms.png'), dpi=200, bbox_inches='tight')
-plt.close()
-
-# ================================================================
-# Figure 5: Final Loss Heatmap
-# ================================================================
-cond_map = {'A': 0, 'B_0.5': 1, 'B_0.9': 2, 'C_0.5': 3, 'C_0.9': 4}
-col_map  = {('100k','42'):0, ('100k','1337'):1, ('2M','42'):2, ('2M','1337'):3}
-row_labels = ['A (baseline)', 'B corpus (0.5)', 'B corpus (0.9)', 'C noise (0.5)', 'C noise (0.9)']
-col_labels = ['100k s42', '100k s1337', '2M s42', '2M s1337']
-
-matrix = np.full((5, 4), np.nan)
-for (sc, sd, c), loss in final.items():
-    matrix[cond_map[c], col_map[(sc, sd)]] = loss
-
-fig, ax = plt.subplots(figsize=(6.5, 4.2))
-im = ax.imshow(matrix, cmap='YlOrRd_r', aspect='auto')
-ax.set_xticks(range(4)); ax.set_xticklabels(col_labels)
-ax.set_yticks(range(5)); ax.set_yticklabels(row_labels)
-
-for i in range(5):
-    for j in range(4):
-        v = matrix[i, j]
-        if np.isnan(v):
-            ax.text(j, i, 'pending', ha='center', va='center', color='#6B6860', style='italic', fontsize=8)
-        else:
-            ax.text(j, i, f'{v:.4f}', ha='center', va='center',
-                    color='#2A2822' if v > 1.5 else '#FFFFFF', fontsize=9)
-
-ax.set_title(f'Final {METRIC_LABEL} — All Conditions', pad=12)
-plt.colorbar(im, ax=ax, label=METRIC_LABEL)
-plt.tight_layout()
-plt.savefig(os.path.join(OUTPUT_DIR, 'loss_heatmap.png'), dpi=200, bbox_inches='tight')
-plt.close()
-
-print('All 5 figures generated in docs/figures/')
+if __name__ == '__main__':
+    main()

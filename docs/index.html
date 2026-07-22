@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fixed-Budget Pretraining Transfer in Small Transformers — Pilot Study</title>
     <meta name="description"
-        content="Pilot study: does pretraining a small transformer on an unrelated corpus change downstream performance versus random initialization? Three conditions, two scales, two seeds.">
+        content="Pilot study: does pretraining a small transformer on an unrelated corpus change downstream performance versus random initialization? Three conditions, two scales, two seeds. All 28 runs complete.">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=Inter:wght@400;500;600&display=swap');
 
@@ -31,9 +31,9 @@
         }
 
         .wrap {
-            max-width: 680px;
+            max-width: 700px;
             margin: 0 auto;
-            padding: 96px 28px 120px;
+            padding: 80px 28px 120px;
         }
 
         .eyebrow {
@@ -56,7 +56,7 @@
 
         .lede {
             font-family: var(--serif);
-            font-size: 1.12rem;
+            font-size: 1.08rem;
             line-height: 1.65;
             color: var(--ink);
             margin: 0 0 8px;
@@ -70,10 +70,42 @@
             border-top: 1px solid var(--rule);
         }
 
-        .status-line strong {
-            color: var(--ink);
-            font-weight: 500;
+        .status-line strong { color: var(--ink); font-weight: 500; }
+
+        /* TLDR box */
+        .tldr {
+            margin: 40px 0;
+            padding: 24px 26px;
+            border: 1px solid var(--rule);
+            border-left: 3px solid var(--accent);
+            border-radius: 4px;
+            background: #F7F5F0;
         }
+
+        .tldr-title {
+            font-family: var(--sans);
+            font-weight: 600;
+            font-size: 0.82rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin: 0 0 14px;
+        }
+
+        .tldr ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .tldr li {
+            font-family: var(--serif);
+            font-size: 0.96rem;
+            line-height: 1.65;
+            margin-bottom: 8px;
+            color: var(--ink);
+        }
+
+        .tldr li strong { font-weight: 600; }
 
         section { margin-top: 56px; }
 
@@ -88,7 +120,7 @@
 
         p {
             font-family: var(--serif);
-            font-size: 1.02rem;
+            font-size: 1.0rem;
             line-height: 1.75;
             color: var(--ink);
             margin: 0 0 14px;
@@ -118,14 +150,14 @@
 
         .path-desc {
             font-family: var(--serif);
-            font-size: 0.96rem;
+            font-size: 0.94rem;
             line-height: 1.6;
             color: var(--ink);
         }
 
         .note {
             font-family: var(--sans);
-            font-size: 0.9rem;
+            font-size: 0.88rem;
             line-height: 1.7;
             color: var(--ink-soft);
             padding-left: 20px;
@@ -203,8 +235,6 @@
         }
 
         .run-cell.done { background: #D4E4D0; color: #3A5A32; }
-        .run-cell.pending { background: #F0EDE5; color: var(--ink-soft); }
-        .run-cell.active { background: #F5E3C0; color: #8A6B30; }
 
         .grid-legend {
             font-family: var(--sans);
@@ -225,17 +255,6 @@
             height: 8px;
             border-radius: 2px;
             display: inline-block;
-        }
-
-        .sponsor {
-            padding-top: 28px;
-            border-top: 1px solid var(--rule);
-        }
-
-        .sponsor p {
-            font-family: var(--sans);
-            font-size: 0.96rem;
-            color: var(--ink);
         }
 
         a {
@@ -265,8 +284,8 @@
         }
 
         @media (max-width: 520px) {
-            .wrap { padding: 64px 22px 88px; }
-            h1 { font-size: 1.65rem; }
+            .wrap { padding: 56px 20px 80px; }
+            h1 { font-size: 1.6rem; }
             .path-row { grid-template-columns: 1fr; gap: 6px; }
             .complete-grid { grid-template-columns: repeat(4, 1fr); }
         }
@@ -281,8 +300,31 @@
         <p class="lede">A pilot study on whether pretraining a small transformer to extreme, fixed-token-budget
             exposure on one corpus — before training on an unrelated one — changes downstream performance
             versus training from random initialization.</p>
-        <p class="status-line">Status: <strong>23 of 28 runs complete</strong> · seed-1337 replication at 2M
-            scale in progress · last health check 2026-07-20 20:00</p>
+        <p class="status-line">Status: <strong>28 of 28 runs complete</strong> · full matrix finished ·
+            last update 2026-07-22</p>
+
+        <!-- TLDR -->
+        <div class="tldr">
+            <p class="tldr-title">TLDR for reviewers</p>
+            <ul>
+                <li><strong>Question:</strong> Does pretraining on unrelated data (structured Arabic text or
+                    random noise) help or hurt a small transformer learning English text?</li>
+                <li><strong>Corpus pretraining (B) consistently hurt:</strong> higher final loss than
+                    baseline at both scales (100k, 2M), both seeds. The structured Arabic text did not
+                    transfer useful structure to English character prediction.</li>
+                <li><strong>Noise pretraining (C) showed a scale-dependent pattern:</strong> at 100k,
+                    noise-pretrained models slightly outperformed baseline (mean Δ = −0.05 to −0.07). At 2M,
+                    the mean effect was approximately zero, with a cross-seed inconsistency (one seed showed
+                    slight harm, the other slight benefit).</li>
+                <li><strong>At 2M seed 42, B ≈ C</strong> — corpus-pretrained and noise-pretrained conditions
+                    converged to similar loss, suggesting the structured nature of pretraining data was not the
+                    relevant variable. Seed 1337 did not replicate this equivalence.</li>
+                <li><strong>Caveats:</strong> n=2 seeds, 100k–2M scale, character-level, pilot study. The
+                    seed-1337 noise checkpoint was regenerated after a data loss event. See
+                    <a href="https://github.com/mohamedhossammohamed/overfit-init-transfer/blob/main/docs/results.md">results.md</a>
+                    for full discussion.</li>
+            </ul>
+        </div>
 
         <!-- ======== Completion ======== -->
         <section>
@@ -314,21 +356,19 @@
                 <div class="run-cell done" title="c_2M_seed42_finetune_frac0.9">C.9</div>
                 <!-- Row 4: 2M seed 1337 -->
                 <div class="run-cell done" title="a_2M_seed1337">A</div>
-                <div class="run-cell pending" title="b_2M_seed1337_pretrain">B-p</div>
-                <div class="run-cell pending" title="b_2M_seed1337_from_quran_frac0.5">B.5</div>
-                <div class="run-cell pending" title="b_2M_seed1337_from_quran_frac0.9">B.9</div>
+                <div class="run-cell done" title="b_2M_seed1337_pretrain">B-p</div>
+                <div class="run-cell done" title="b_2M_seed1337_from_quran_frac0.5">B.5</div>
+                <div class="run-cell done" title="b_2M_seed1337_from_quran_frac0.9">B.9</div>
                 <div class="run-cell done" title="c_2M_seed1337_pretrain">C-p</div>
-                <div class="run-cell active" title="c_2M_seed1337_finetune_frac0.5 — in progress">C.5</div>
-                <div class="run-cell pending" title="c_2M_seed1337_finetune_frac0.9">C.9</div>
+                <div class="run-cell done" title="c_2M_seed1337_finetune_frac0.5">C.5</div>
+                <div class="run-cell done" title="c_2M_seed1337_finetune_frac0.9">C.9</div>
             </div>
             <div class="grid-legend">
-                <span><span class="dot" style="background:#D4E4D0;"></span> Complete</span>
-                <span><span class="dot" style="background:#F5E3C0;"></span> In progress</span>
-                <span><span class="dot" style="background:#F0EDE5;"></span> Queued</span>
+                <span><span class="dot" style="background:#D4E4D0;"></span> Complete (28/28)</span>
             </div>
             <p style="font-size:0.88rem; margin-top:10px;">Rows: 100k seed&nbsp;42 · 100k seed&nbsp;1337 ·
-                2M seed&nbsp;42 · 2M seed&nbsp;1337. All 100k-scale and 2M-seed-42 runs are
-                complete. The remaining five runs are 2M-seed-1337 Path&nbsp;B and Path&nbsp;C conditions.</p>
+                2M seed&nbsp;42 · 2M seed&nbsp;1337. Columns: baseline, pretrain, B frac&nbsp;0.5,
+                B frac&nbsp;0.9, C pretrain, C frac&nbsp;0.5, C frac&nbsp;0.9.</p>
         </section>
 
         <!-- ======== Design ======== -->
@@ -342,184 +382,202 @@
                 </div>
                 <div class="path-row">
                     <div class="path-name">Condition B</div>
-                    <div class="path-desc">Corpus-pretrained. Random initialization, pretrained on a structured
-                        Arabic-script corpus with near-zero character overlap with the English target, then
-                        finetuned on the target corpus with the same step budget as Condition&nbsp;A.</div>
+                    <div class="path-desc">Corpus-pretrained. Pretrained on structured Arabic-script text
+                        with near-zero character overlap with the English target, then finetuned on the
+                        target corpus with the same step budget as Condition&nbsp;A.</div>
                 </div>
                 <div class="path-row">
                     <div class="path-name">Condition C</div>
-                    <div class="path-desc">Noise-pretrained. Random initialization, pretrained on uniformly
-                        sampled random characters from the shared vocabulary, then finetuned on the target
-                        corpus. Controls for whether any prior gradient exposure, regardless of structure,
-                        produces the same effect.</div>
+                    <div class="path-desc">Noise-pretrained. Pretrained on uniformly sampled random characters
+                        from the shared vocabulary, then finetuned on the target corpus. Controls for
+                        whether any prior gradient exposure, regardless of structure, produces the
+                        same effect.</div>
                 </div>
                 <div class="path-row">
                     <div class="path-name">Scales</div>
-                    <div class="path-desc">Two model sizes: ~106k parameters (2 layers, 4 heads, embed 64)
-                        and ~1.98M parameters (4 layers, 8 heads, embed 256). Two random seeds per
+                    <div class="path-desc">~106k parameters (2 layers, 4 heads, embed 64) and ~1.98M
+                        parameters (10 layers, 4 heads, embed 128). Two random seeds per
                         configuration (42, 1337).</div>
                 </div>
                 <div class="path-row">
                     <div class="path-name">Budget</div>
-                    <div class="path-desc">Fixed at 200 tokens per parameter — approximately 10× the Chinchilla
-                        compute-optimal ratio — applied identically to pretraining and finetuning phases.
-                        Checkpoints for finetuning are taken at 50% and 90% of the pretraining token budget.</div>
+                    <div class="path-desc">Fixed at 200 tokens per parameter (~10× Chinchilla
+                        compute-optimal). Finetuning checkpoints at 50% and 90% of the pretraining
+                        token budget. All finetuning runs receive the same total step count.</div>
                 </div>
             </div>
         </section>
 
-        <!-- ======== Methodology ======== -->
+        <!-- ======== Methodology note ======== -->
         <section>
-            <h2>Methodology</h2>
-            <p>Training budgets are set in tokens, not by loss threshold: each run receives exactly
-                <code>200&nbsp;×&nbsp;param_count</code> tokens. Three conditions (baseline /
-                structured-corpus-pretrained / noise-pretrained) are compared at two model sizes across two
-                random seeds. Final training loss is compared at matched finetuning step budgets across
-                conditions.</p>
-            <p>Conditions B and C each produce two finetuning runs from checkpoints taken at 50% and 90% of
-                the pretraining budget. The baseline (Condition A) uses the full budget as a single training
-                phase. All finetuning runs receive the same total step count regardless of checkpoint depth.</p>
-            <p class="note"><strong>Metric note.</strong> At the 2M scale with 200 tokens per parameter, all
-                conditions overfit substantially on the small target corpus (validation loss diverges above
-                4.0 while training loss falls below 0.4). Training loss is therefore the informative comparison
-                metric: it reflects how efficiently each condition memorizes the target data under identical
-                compute budgets. The 100k scale shows moderate overfitting; the pattern is consistent across
-                both metrics at that scale.</p>
+            <h2>Metric note</h2>
+            <p class="note"><strong>Training loss</strong> is used as the comparison metric throughout.
+                At the 2M scale with 200 tokens per parameter on ~1MB of target text, all conditions
+                overfit substantially (validation loss diverges above 4.0 while training loss falls below
+                0.4). Training loss reflects how efficiently each condition memorizes the target data under
+                identical compute budgets. At 100k, overfitting is moderate and the pattern is consistent
+                across both metrics.</p>
         </section>
 
-        <!-- ======== Analysis ======== -->
+        <!-- ======== Results tables ======== -->
+        <section>
+            <h2>Results: 100k scale (both seeds complete)</h2>
+            <p>Final training loss at budget exhaustion (~21.2M tokens, 1,296 steps).</p>
+            <table>
+                <thead>
+                    <tr><th>Condition</th><th>Seed 42</th><th>Seed 1337</th><th>Mean</th><th>Δ vs A</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>A (baseline)</td><td>1.8056</td><td>1.8073</td><td>1.8064</td><td>—</td></tr>
+                    <tr><td>B frac 0.5</td><td>2.0077</td><td>1.9839</td><td>1.9958</td><td>+0.189</td></tr>
+                    <tr><td>B frac 0.9</td><td>1.8787</td><td>1.8533</td><td>1.8660</td><td>+0.060</td></tr>
+                    <tr><td>C frac 0.5</td><td>1.7503</td><td>1.7686</td><td>1.7594</td><td>−0.047</td></tr>
+                    <tr><td>C frac 0.9</td><td>1.7365</td><td>1.7355</td><td>1.7360</td><td>−0.070</td></tr>
+                </tbody>
+            </table>
+            <p>Corpus-pretrained (B) underperformed baseline. Noise-pretrained (C) slightly outperformed
+                baseline. Both patterns replicated across seeds.</p>
+        </section>
+
+        <section>
+            <h2>Results: 2M scale (both seeds complete)</h2>
+            <p>Final training loss at budget exhaustion (~396.8M tokens, 24,219 steps).</p>
+            <table>
+                <thead>
+                    <tr><th>Condition</th><th>Seed 42</th><th>Seed 1337</th><th>Mean</th><th>Δ vs A</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>A (baseline)</td><td>0.3205</td><td>0.3395</td><td>0.3300</td><td>—</td></tr>
+                    <tr><td>B frac 0.5</td><td>0.3820</td><td>0.4212</td><td>0.4016</td><td>+0.072</td></tr>
+                    <tr><td>B frac 0.9</td><td>0.3719</td><td>0.4160</td><td>0.3940</td><td>+0.064</td></tr>
+                    <tr><td>C frac 0.5</td><td>0.3827</td><td>0.2824</td><td>0.3326</td><td>+0.003</td></tr>
+                    <tr><td>C frac 0.9</td><td>0.3648</td><td>0.2998</td><td>0.3323</td><td>+0.002</td></tr>
+                </tbody>
+            </table>
+            <p>Corpus-pretrained (B) consistently underperformed baseline across both seeds.
+                Noise-pretrained (C) showed a cross-seed inconsistency: seed 42 underperformed baseline,
+                seed 1337 outperformed it. The mean Condition C delta at 2M is approximately zero.</p>
+        </section>
+
+        <!-- ======== Analysis figures ======== -->
         <section>
             <h2>Analysis</h2>
 
             <div class="fig">
                 <img src="figures/learning_curves.png"
                     alt="Training loss trajectories for all conditions at 100k and 2M scales">
-                <p class="fig-cap"><strong>Fig.&nbsp;1.</strong> Training loss over tokens seen (finetuning
-                    phase) for all conditions. Solid lines: seed 42. Dashed lines: seed 1337. At 2M (right
-                    panel), all pretrained conditions (B and C) converge to similar final loss, above the
-                    baseline.</p>
+                <p class="fig-cap"><strong>Fig.&nbsp;1.</strong> Training loss trajectories (finetuning
+                    phase) for all conditions. Solid: seed 42. Dashed: seed 1337.</p>
             </div>
 
             <div class="fig">
                 <img src="figures/relative_delta.png"
-                    alt="Bar chart of final loss delta relative to baseline for each condition">
+                    alt="Bar chart of final loss delta relative to baseline">
                 <p class="fig-cap"><strong>Fig.&nbsp;2.</strong> Final training loss difference relative to
-                    the random-init baseline (Condition A). Positive values indicate higher loss (worse
-                    performance). At 2M, corpus-pretrained (B) and noise-pretrained (C) conditions show
-                    comparable deficits. 2M bars are seed-42 only (n=1).</p>
+                    baseline (Condition A). Positive = worse. Bars show mean of both seeds at each
+                    scale.</p>
+            </div>
+
+            <div class="fig">
+                <img src="figures/scale_interaction.png"
+                    alt="Scale interaction showing regularization flip">
+                <p class="fig-cap"><strong>Fig.&nbsp;3.</strong> Scale interaction. Noise pretraining (C)
+                    slightly outperformed baseline at 100k but showed no robust directional effect at 2M.
+                    Corpus pretraining (B) underperformed baseline at both scales.</p>
+            </div>
+
+            <div class="fig">
+                <img src="figures/seed_replication.png"
+                    alt="Cross-seed replication at 2M scale">
+                <p class="fig-cap"><strong>Fig.&nbsp;4.</strong> Cross-seed comparison at 2M. Condition B
+                    replicates consistently. Condition C shows a cross-seed inconsistency: seed 42
+                    underperformed baseline, seed 1337 outperformed it.</p>
             </div>
 
             <div class="fig">
                 <img src="figures/recovery_dynamics.png"
-                    alt="Early finetuning recovery dynamics for all conditions">
-                <p class="fig-cap"><strong>Fig.&nbsp;3.</strong> Early finetuning steps (seed 42). Pretrained
-                    conditions start from higher loss but descend more steeply. By ~200 steps (100k) and
-                    ~1000 steps (2M), all conditions reach comparable loss ranges, after which the baseline
-                    maintains a slight lead through budget exhaustion.</p>
+                    alt="Early finetuning recovery dynamics">
+                <p class="fig-cap"><strong>Fig.&nbsp;5.</strong> Early finetuning steps (seed 42).
+                    All pretrained conditions recover to baseline-comparable loss ranges within
+                    ~200 steps (100k) or ~1,000 steps (2M).</p>
             </div>
 
             <div class="fig">
                 <img src="figures/weight_update_norms.png"
-                    alt="Weight update norm trajectories across training">
-                <p class="fig-cap"><strong>Fig.&nbsp;4.</strong> Per-step weight update norm ‖ΔW‖ during
-                    finetuning (seed 42). Pretrained conditions show elevated initial update magnitudes
-                    at 2M, consistent with larger early gradients when adapting from a distant starting
-                    point.</p>
+                    alt="Weight update norm trajectories">
+                <p class="fig-cap"><strong>Fig.&nbsp;6.</strong> Per-step weight update norm ‖ΔW‖ during
+                    finetuning (seed 42).</p>
             </div>
 
             <div class="fig">
                 <img src="figures/loss_heatmap.png"
-                    alt="Final training loss matrix across all conditions, scales, and seeds">
-                <p class="fig-cap"><strong>Fig.&nbsp;5.</strong> Final training loss at budget exhaustion for
-                    all completed runs. Cells marked "pending" correspond to 2M-seed-1337 runs not yet
-                    complete.</p>
+                    alt="Final training loss heatmap across all conditions">
+                <p class="fig-cap"><strong>Fig.&nbsp;7.</strong> Final training loss at budget exhaustion.
+                    All 28 runs complete.</p>
             </div>
         </section>
 
-        <!-- ======== Results tables ======== -->
+        <!-- ======== Observations ======== -->
         <section>
-            <h2>Results: 100k scale (both seeds complete)</h2>
-            <p>Final training loss at budget exhaustion (~21.2M tokens). Both seeds complete for all conditions.</p>
+            <h2>Observations</h2>
+            <p>Corpus pretraining on structured Arabic text (Condition B) produced consistent negative
+                transfer at both scales and both seeds. The model trained from random initialization
+                reached lower final loss in every case.</p>
+            <p>Noise pretraining (Condition C) showed a scale-dependent pattern: at 100k, noise-pretrained
+                models slightly outperformed the baseline (consistent across seeds). At 2M, the results
+                were mixed — one seed showed slight harm, the other slight benefit, yielding a near-zero
+                mean effect.</p>
+            <p>At the 2M scale in seed 42, corpus-pretrained (B) and noise-pretrained (C) conditions
+                converged to similar final loss, both above baseline. This suggested the structured nature
+                of pretraining data was not the relevant variable. However, seed 1337 did not replicate
+                this B ≈ C equivalence, with Condition C reaching substantially lower loss than
+                Condition B.</p>
+            <p>Deeper pretraining (frac 0.9 vs 0.5) consistently produced slightly lower final loss,
+                despite identical finetuning budgets. This held across both conditions and both seeds.</p>
+        </section>
 
-            <table>
-                <thead>
-                    <tr><th>Condition</th><th>Seed 42</th><th>Seed 1337</th><th>Mean</th></tr>
-                </thead>
-                <tbody>
-                    <tr><td>A (baseline)</td><td>1.8056</td><td>1.8073</td><td>1.8065</td></tr>
-                    <tr><td>B frac 0.5</td><td>2.0077</td><td>1.9839</td><td>1.9958</td></tr>
-                    <tr><td>B frac 0.9</td><td>1.8787</td><td>1.8533</td><td>1.8660</td></tr>
-                    <tr><td>C frac 0.5</td><td>1.7503</td><td>1.7686</td><td>1.7594</td></tr>
-                    <tr><td>C frac 0.9</td><td>1.7365</td><td>1.7355</td><td>1.7360</td></tr>
-                </tbody>
-            </table>
+        <!-- ======== Caveats ======== -->
+        <section>
+            <h2>Caveats</h2>
+            <p class="note"><strong>Scale and power.</strong> Models are 106k–1.98M parameters,
+                character-level tokenization, n=2 seeds. This is sufficient for directional consistency
+                checks but not for formal statistical significance claims. Results may not generalize to
+                larger scales or subword tokenization.</p>
+            <p class="note"><strong>Corpus discontinuity.</strong> Seeds 42 and 1337 use different underlying
+                text for Condition B pretraining (original Arabic text vs. Arabic Wikipedia replacement).
+                Conditions A and C are true replicates across seeds.
+                See <a href="https://github.com/mohamedhossammohamed/overfit-init-transfer/blob/main/results/data_glossary.md">data_glossary.md</a>.</p>
+            <p class="note"><strong>Checkpoint regeneration.</strong> The noise pretraining checkpoint for
+                seed 1337 (Condition C) was lost during a repository restructuring and was regenerated
+                using the same seed and configuration. Although deterministic seeding was used, GPU
+                non-determinism means the regenerated checkpoint may differ from the original. The seed-1337
+                Condition C results (which show lower final loss than baseline, unlike seed 42) should be
+                interpreted with this confound in mind.</p>
+            <p class="note"><strong>Exploratory pilot.</strong> This is a pilot study: a pattern here is a
+                reason to investigate further, not a finding on its own. Every metric and checkpoint is
+                published as collected, including null or inconsistent results.</p>
+        </section>
 
-            <p>At 100k, the noise-pretrained condition (C) reaches lower final training loss than the
-                baseline, while the corpus-pretrained condition (B) underperforms it. This pattern replicates
-                across both seeds. All runs were still descending at budget exhaustion.</p>
+        <!-- ======== Documentation ======== -->
+        <section>
+            <h2>Documentation</h2>
+            <p><a href="https://github.com/mohamedhossammohamed/overfit-init-transfer/blob/main/docs/methodology.md">methodology.md</a>
+                — Full experimental design, architecture, hyperparameters, metric selection</p>
+            <p><a href="https://github.com/mohamedhossammohamed/overfit-init-transfer/blob/main/docs/results.md">results.md</a>
+                — Complete results tables, cross-seed analysis, checkpoint fraction effects, all caveats</p>
+            <p><a href="https://github.com/mohamedhossammohamed/overfit-init-transfer/blob/main/results/data_glossary.md">data_glossary.md</a>
+                — Corpus definitions, known discontinuities across seeds</p>
         </section>
 
         <section>
-            <h2>Results: 2M scale (seed 42 complete; seed 1337 in progress)</h2>
-            <p>Final training loss for completed 2M runs. The B-vs-C comparison at 2M is single-seed only.</p>
-
-            <table>
-                <thead>
-                    <tr><th>Condition</th><th>Seed 42</th><th>Seed 1337</th></tr>
-                </thead>
-                <tbody>
-                    <tr><td>A (baseline)</td><td>0.3205</td><td>0.3395</td></tr>
-                    <tr><td>B frac 0.5</td><td>0.3820</td><td>pending</td></tr>
-                    <tr><td>B frac 0.9</td><td>0.3719</td><td>pending</td></tr>
-                    <tr><td>C frac 0.5</td><td>0.3827</td><td>in progress</td></tr>
-                    <tr><td>C frac 0.9</td><td>0.3648</td><td>pending</td></tr>
-                </tbody>
-            </table>
-        </section>
-
-        <!-- ======== Tentative reading ======== -->
-        <section>
-            <h2>Tentative reading</h2>
-            <p>At the 2M scale (seed 42, the only complete seed for all three conditions), the
-                corpus-pretrained condition (B) and the noise-pretrained condition (C) converge to
-                similar final training loss — both underperforming the random-initialization baseline (A).
-                The baseline achieves 0.3205; the best pretrained conditions reach 0.3648 (C frac 0.9)
-                and 0.3719 (B frac 0.9).</p>
-            <p>This indicates that, at this scale, generic prior training exposure does not transfer
-                measurably useful structure in the weights across languages or domains with no character
-                overlap. The shared-vocabulary structure the model could in principle have leveraged does
-                not produce a measurable downstream benefit under these conditions. The corpus-pretrained
-                condition does not outperform the noise-pretrained control, suggesting that the structured
-                nature of the pretraining data is not the relevant variable.</p>
-            <p>At the 100k scale (both seeds complete), the pattern differs: noise-pretrained (C) runs
-                reach lower final loss than the baseline, while corpus-pretrained (B) runs do not. The
-                difference is small and all curves were still descending at budget exhaustion.</p>
-
-            <p class="note"><strong>Caveats.</strong> The 2M B-vs-C comparison is single-seed (seed 42 only);
-                seed-1337 replication is in progress. Per the project's data glossary, seeds 42 and 1337 use
-                different underlying text for Path B pretraining (the original corpus vs. a byte-and-token-matched
-                replacement Arabic Wikipedia corpus), making them non-exact replicates for Path B specifically.
-                Paths A and C are unaffected and remain true replicates across seeds. All results should be
-                understood as exploratory pilot data, not confirmatory findings.</p>
-        </section>
-
-        <!-- ======== Scope ======== -->
-        <section>
-            <h2>Scope</h2>
-            <p class="note">This is a small, character-level pilot — models between 106k and 1.98M
-                parameters, two random seeds per configuration, run on personal hardware. It is exploratory,
-                not confirmatory: a pattern here is a reason to look further, not a finding on its own. Every
-                metric and checkpoint is published as collected, including null or negative results.</p>
-        </section>
-
-        <section class="sponsor">
             <h2>Open source</h2>
-            <p>Code, data, and full methodology:
+            <p>Code, data, and full telemetry:
                 <a href="https://github.com/mohamedhossammohamed/overfit-init-transfer">github.com/mohamedhossammohamed/overfit-init-transfer</a>
             </p>
         </section>
 
-        <footer>Updated 2026-07-20. Independent project, not affiliated with any institution.</footer>
+        <footer>Updated 2026-07-22. Independent project, not affiliated with any institution.
+            All 28 runs complete.</footer>
 
     </div>
 </body>

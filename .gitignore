@@ -12,3 +12,5 @@ results/**/checkpoint*.pt
 dummy_test*/
 calibration_tmp/
 *.bin
+.local_lib/
+.mplconfig/
